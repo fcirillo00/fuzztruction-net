@@ -103,53 +103,53 @@ RUN cd /tmp && \
 
 COPY patches /tmp/patches
 
-# Install afl-net
-RUN sudo mkdir /competitors && \
-    sudo chown user:user -R /competitors && \
-    cd /competitors && \
-    git clone https://github.com/aflnet/aflnet.git && \
-    cd aflnet  && \
-    git checkout 62d63a59230bb5f5c6e54cddd381b9425dba3726 && \
-    git apply /tmp/patches/aflnet.patch && \
-    make clean all && \
-    cd  llvm_mode && \
-    make
+# # Install afl-net
+# RUN sudo mkdir /competitors && \
+#     sudo chown user:user -R /competitors && \
+#     cd /competitors && \
+#     git clone https://github.com/aflnet/aflnet.git && \
+#     cd aflnet  && \
+#     git checkout 62d63a59230bb5f5c6e54cddd381b9425dba3726 && \
+#     git apply /tmp/patches/aflnet.patch && \
+#     make clean all && \
+#     cd  llvm_mode && \
+#     make
 
-# Install SGFuzz
-RUN cd /competitors && \
-    git clone https://github.com/bajinsheng/SGFuzz.git && \
-    cd SGFuzz && \
-    git checkout 00dbbd70ba79f1bcff3f7dfdb4fda0645cf91225 && \
-    git apply /tmp/patches/sgfuzz.patch && \
-    ./build.sh && \
-    sudo cp libsfuzzer.a /usr/lib/libsFuzzer.a
+# # Install SGFuzz
+# RUN cd /competitors && \
+#     git clone https://github.com/bajinsheng/SGFuzz.git && \
+#     cd SGFuzz && \
+#     git checkout 00dbbd70ba79f1bcff3f7dfdb4fda0645cf91225 && \
+#     git apply /tmp/patches/sgfuzz.patch && \
+#     ./build.sh && \
+#     sudo cp libsfuzzer.a /usr/lib/libsFuzzer.a
 
-# Install hongfuzz netdrive that is used by SGFuzz
-RUN cd /competitors && \
-    git clone https://github.com/google/honggfuzz.git && \
-    cd honggfuzz && \
-    git checkout 6f89ccc9c43c6c1d9f938c81a47b72cd5ada61ba && \
-    CC=clang CFLAGS="-fsanitize=fuzzer-no-link -fsanitize=address" make libhfcommon/libhfcommon.a && \
-    CC=clang CFLAGS="-fsanitize=fuzzer-no-link -fsanitize=address -DHFND_RECVTIME=1" make libhfnetdriver/libhfnetdriver.a && \
-    sudo mv libhfcommon/libhfcommon.a /usr/lib/libhfcommon.a && \
-    sudo mv libhfnetdriver/libhfnetdriver.a /usr/lib/libhfnetdriver.a
+# # Install hongfuzz netdrive that is used by SGFuzz
+# RUN cd /competitors && \
+#     git clone https://github.com/google/honggfuzz.git && \
+#     cd honggfuzz && \
+#     git checkout 6f89ccc9c43c6c1d9f938c81a47b72cd5ada61ba && \
+#     CC=clang CFLAGS="-fsanitize=fuzzer-no-link -fsanitize=address" make libhfcommon/libhfcommon.a && \
+#     CC=clang CFLAGS="-fsanitize=fuzzer-no-link -fsanitize=address -DHFND_RECVTIME=1" make libhfnetdriver/libhfnetdriver.a && \
+#     sudo mv libhfcommon/libhfcommon.a /usr/lib/libhfcommon.a && \
+#     sudo mv libhfnetdriver/libhfnetdriver.a /usr/lib/libhfnetdriver.a
 
-# Install StateAfl
-RUN sudo apt install -y tshark && sudo pip3 install --break-system-packages pyshark
-RUN cd /competitors && \
-    git clone https://github.com/stateafl/stateafl.git  && \
-    cd stateafl  && \
-    git checkout d923e22f7b2688db45b08f3fa3a29a566e7ff3a4  && \
-    git submodule init && \
-    git submodule update && \
-    git apply /tmp/patches/stateafl.patch && \
-    make -j  && \
-    cd llvm_mode  && \
-    rm -f libmvptree.a containers.a libtlsh.a && \
-    cd tlsh && \
-    git apply /tmp/patches/tlsh.patch && \
-    cd .. && \
-    make -j
+# # Install StateAfl
+# RUN sudo apt install -y tshark && sudo pip3 install --break-system-packages pyshark
+# RUN cd /competitors && \
+#     git clone https://github.com/stateafl/stateafl.git  && \
+#     cd stateafl  && \
+#     git checkout d923e22f7b2688db45b08f3fa3a29a566e7ff3a4  && \
+#     git submodule init && \
+#     git submodule update && \
+#     git apply /tmp/patches/stateafl.patch && \
+#     make -j  && \
+#     cd llvm_mode  && \
+#     rm -f libmvptree.a containers.a libtlsh.a && \
+#     cd tlsh && \
+#     git apply /tmp/patches/tlsh.patch && \
+#     cd .. && \
+#     make -j
 
 # Pubkey part of /home/user/shared/fuzztruction-experiments/comparison-with-state-of-the-art/configurations/networked/dropbear/keys/ecdsa and .../rsa_key
 # /home/user/fuzztruction/fuzztruction-experiments/comparison-with-state-of-the-art/binaries/networked/dropbear/consumer_afl_net/dropbear/dropbearkey ed25519  -y -f $PWD/ed25519
