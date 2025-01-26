@@ -1,7 +1,7 @@
 # Quick start
 
 ```sh
-git clone https://github.com/fuzztruction/fuzztruction-net.git && \
+git clone https://github.com/fcirillo00/fuzztruction-net.git && \
     cd fuzztruction-net && \
     git submodule update --init
 
