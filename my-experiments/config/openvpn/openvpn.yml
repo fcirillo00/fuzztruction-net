@@ -9,7 +9,7 @@ jail-gid: 1000
 source:
     # The binary that has to be instrumented with our custom compiler.
     bin-path: "/home/user/fuzztruction/my-experiments/build/openvpn/generator/openvpn"
-    arguments: ["--config", "/home/user/fuzztruction/my-experiments/config/openvpn/configs/client.conf", "--cd", "/home/user/fuzztruction/my-experiments/config/openvpn"]
+    arguments: ["--config", "/home/user/fuzztruction/my-experiments/config/openvpn/configs/client.conf", "--verb", "9", "--cd", "/home/user/fuzztruction/my-experiments/config/openvpn"]
     input-type: Udp
     output-type: Udp
     is-server: false
@@ -20,7 +20,7 @@ source:
 sink:
     # The target binary that has to be compiled with our custom AFL++ version.
     bin-path: "/home/user/fuzztruction/my-experiments/build/openvpn/consumer/openvpn"
-    arguments: ["--config", "/home/user/fuzztruction/my-experiments/config/openvpn/configs/server.conf", "--cd", "/home/user/fuzztruction/my-experiments/config/openvpn"]
+    arguments: ["--config", "/home/user/fuzztruction/my-experiments/config/openvpn/configs/server.conf", "--verb", "9", "--cd", "/home/user/fuzztruction/my-experiments/config/openvpn"]
     input-type: Udp
     output-type: Udp
     is-server: true
@@ -32,6 +32,7 @@ sink:
     # necessary, the server needs to shutdown gracefully to do cleanup of ip routes and such
     # otherwise the server crashes at the second attempt because it cant do ip commands
     # alternative solution: cleanup script with "sudo ip addr flush dev tun0"
+    # solved by editing source code of openvpn to cleanup at init
     send-sigterm: true 
 
 # Unused.

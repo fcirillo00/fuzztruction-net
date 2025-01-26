@@ -30,9 +30,6 @@ sudo ./target/debug/fuzztruction ./my-experiments/config/openvpn/openvpn.yml --l
 ```
 
 ## Other stuff
-If server doesn't start for ip problems:
-`sudo ip addr flush dev tun0`
-
 Everything related to openvpn is in `my-experiments`.
 
 ## Problems faced
@@ -43,3 +40,5 @@ Dockerfile was broken.
 OpenVPN needs to run in user mode, which requires a pre-created tun0 device and sudo wrapper script for running ip commands. OpenVPN binaries need net capabilities inside Rust "jail".
 
 This is all taken care of in `init.sh`.
+
+Source code of openvpn has been modified to flush dev tun0/1 at init

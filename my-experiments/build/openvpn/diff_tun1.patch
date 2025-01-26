@@ -1,0 +1,11 @@
+--- openvpn2.c	2025-01-26 19:13:21.114002318 +0000
++++ openvpn.c	2025-01-26 19:13:25.904161160 +0000
+@@ -176,6 +176,8 @@
+      * only be initialized once per program instantiation. */
+     c.first_time = true;
+ 
++    system("/usr/local/sbin/unpriv-ip addr flush dev tun1");
++
+     /* initialize program-wide statics */
+     if (init_static())
+     {

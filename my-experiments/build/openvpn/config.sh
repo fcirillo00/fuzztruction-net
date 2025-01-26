@@ -15,6 +15,8 @@ function build_generator {
     export CFLAGS="-g -O3 -DNDEBUG -D_FORTIFY_SOURCE=0 -DFT_FUZZING -DFT_GENERATOR"
     export CXXFLAGS="-g -O3 -DNDEBUG -D_FORTIFY_SOURCE=0 -DFT_FUZZING -DFT_GENERATOR"
 
+    patch src/openvpn/openvpn.c < ../diff_tun0.patch
+
     autoreconf -i -v -f
     # enable-iproute2 required for no-root execution
     ./configure --disable-lz4 --enable-iproute2
@@ -40,6 +42,8 @@ function build_consumer {
     export CXX=afl-clang-fast++
     export CFLAGS="-g -O3 -fsanitize=address -DFT_FUZZING -DFT_CONSUMER"
     export CXXFLAGS="-g -O3 -fsanitize=address -DFT_FUZZING -DFT_CONSUMER"
+
+    patch src/openvpn/openvpn.c < ../diff_tun1.patch
 
     autoreconf -i -v -f
     # enable-iproute2 required for no-root execution
