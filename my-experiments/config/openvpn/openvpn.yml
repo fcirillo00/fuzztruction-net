@@ -9,7 +9,7 @@ jail-gid: 1000
 source:
     # The binary that has to be instrumented with our custom compiler.
     bin-path: "/home/user/fuzztruction/my-experiments/build/openvpn/generator/openvpn"
-    arguments: ["--config", "/home/user/fuzztruction/my-experiments/config/openvpn/configs/client.conf", "--verb", "9", "--cd", "/home/user/fuzztruction/my-experiments/config/openvpn"]
+    arguments: ["--config", "/home/user/fuzztruction/my-experiments/config/openvpn/configs/client.conf", "--cd", "/home/user/fuzztruction/my-experiments/config/openvpn"]
     input-type: Udp
     output-type: Udp
     is-server: false
@@ -20,7 +20,7 @@ source:
 sink:
     # The target binary that has to be compiled with our custom AFL++ version.
     bin-path: "/home/user/fuzztruction/my-experiments/build/openvpn/consumer/openvpn"
-    arguments: ["--config", "/home/user/fuzztruction/my-experiments/config/openvpn/configs/server.conf", "--verb", "9", "--cd", "/home/user/fuzztruction/my-experiments/config/openvpn"]
+    arguments: ["--config", "/home/user/fuzztruction/my-experiments/config/openvpn/configs/server.conf", "--cd", "/home/user/fuzztruction/my-experiments/config/openvpn"]
     input-type: Udp
     output-type: Udp
     is-server: true
