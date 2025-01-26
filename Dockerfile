@@ -4,13 +4,13 @@ ARG PREBUILT_LLVM_IMAGE=nbars/fuzztruction-llvm_debug:llvmorg-17.0.6
 FROM ${PREBUILT_LLVM_IMAGE} AS llvm
 
 FROM ubuntu:24.04 AS dev
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 # ENV CCACHE_DIR=/ccache
 # ENV CCACHE_MAXSIZE=25G
 
 RUN sed -i "s/^# deb-src/deb-src/g" /etc/apt/sources.list
 
-RUN apt update -y && yes | unminimize && apt-mark hold "llvm-*" && apt-mark hold "clang-*"
+RUN apt update -y && apt-mark hold "llvm-*" && apt-mark hold "clang-*"
 RUN \
     apt update -y && \
     apt install -y aspell-en bear binutils-gold bison build-essential cm-super \
@@ -21,7 +21,7 @@ RUN \
         psmisc python3-pip qpdf ripgrep rr rsync strace sudo texinfo texlive \
         texlive-fonts-recommended texlive-latex-extra tmux tree ubuntu-dbgsym-keyring \
         unzip valgrind virtualenv wget xdot zip zlib1g-dev zsh \
-        graphviz-dev libcap-dev tcpflow gnutls-dev tcpdump graphviz-dev jq netcat-traditional python3.11-venv \
+        graphviz-dev libcap-dev tcpflow gnutls-dev tcpdump graphviz-dev jq netcat-traditional \
         elfutils zstd pax-utils
 
 RUN sudo pip3 install --break-system-packages mypy pylint matplotlib pyelftools lit pyyaml psutil pypcapkit awscli

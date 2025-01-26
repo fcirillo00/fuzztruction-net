@@ -1,0 +1,39 @@
+# Directory in that all files that belong to the fuzzing campaign are stored.
+work-directory: "/tmp/openvpn-1"
+input-directory: "/home/user/fuzztruction/fuzztruction-experiments/comparison-with-state-of-the-art/configurations/networked/no-inputs"
+# UID/GID the weird peer's privileges are dropped to.
+jail-uid: 1000
+jail-gid: 1000
+
+# The program that is acting as the weird peer.
+source:
+    # The binary that has to be instrumented with our custom compiler.
+    bin-path: "/home/user/fuzztruction/my-experiments/build/openvpn/generator/openvpn"
+    arguments: ["--config", "/home/user/fuzztruction/my-experiments/config/openvpn/configs/client.conf", "--verb", "9", "--cd", "/home/user/fuzztruction/my-experiments/config/openvpn"]
+    input-type: Udp
+    output-type: Udp
+    is-server: false
+    log-stdout: true
+    log-stderr: true
+
+# The program that is actually fuzzed.
+sink:
+    # The target binary that has to be compiled with our custom AFL++ version.
+    bin-path: "/home/user/fuzztruction/my-experiments/build/openvpn/consumer/openvpn"
+    arguments: ["--config", "/home/user/fuzztruction/my-experiments/config/openvpn/configs/server.conf", "--verb", "9", "--cd", "/home/user/fuzztruction/my-experiments/config/openvpn"]
+    input-type: Udp
+    output-type: Udp
+    is-server: true
+    server-port: "1194"
+    server-ready-on: "Bind(0)" # necessary, otherwise fuzzer doesn't see the server as ready
+    log-stdout: true
+    log-stderr: true
+    allow-unstable-sink: true # i dont know what it does
+    # necessary, the server needs to shutdown gracefully to do cleanup of ip routes and such
+    # otherwise the server crashes at the second attempt because it cant do ip commands
+    # alternative solution: cleanup script with "sudo ip addr flush dev tun0"
+    send-sigterm: true 
+
+# Unused.
+vanilla:
+    bin-path: "/usr/bin/true"
