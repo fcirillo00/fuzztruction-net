@@ -65,14 +65,10 @@ function get_source {
     rm -rf src
     mkdir -p src
     pushd src > /dev/null
-    wget https://swupdate.openvpn.org/community/releases/openvpn-2.6.13.tar.gz
-    tar -zxvf openvpn-2.6.13.tar.gz 
-    rm openvpn-2.6.13.tar.gz
     
-    # Copy all files from openvpn-2.6.13/ to the current directory
-    shopt -s dotglob
-    cp -r openvpn-2.6.13/* .
-    rm -rf openvpn-2.6.13
+    # Clone the repository and checkout the specific branch
+    git clone --branch release/2.6 --single-branch https://github.com/OpenVPN/openvpn.git .
+    
     popd > /dev/null
 }
 

@@ -42,3 +42,5 @@ OpenVPN needs to run in user mode, which requires a pre-created tun0 device and 
 This is all taken care of in `init.sh`.
 
 Source code of openvpn has been modified to flush dev tun0/1 at init
+
+Openvpn needs to kill itself after handshake completes.
