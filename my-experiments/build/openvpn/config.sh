@@ -7,8 +7,9 @@ function build_generator {
     cp -r src generator
 
     pushd generator > /dev/null
-    export FT_CALL_INJECTION=1
-    export FT_HOOK_INS=call,branch,load,store,select,switch
+    # export FT_CALL_INJECTION=1
+    # export FT_HOOK_INS=call,branch,load,store,select,switch
+    export FT_HOOK_INS=load
 
     export CC=/home/user/fuzztruction/generator/pass/fuzztruction-source-clang-fast
     export CXX=/home/user/fuzztruction/generator/pass/fuzztruction-source-clang-fast++

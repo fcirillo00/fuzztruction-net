@@ -1,5 +1,5 @@
 # Directory in that all files that belong to the fuzzing campaign are stored.
-work-directory: "/tmp/openvpn-1"
+work-directory: "/home/user/fuzztruction/openvpn-1"
 input-directory: "/home/user/fuzztruction/fuzztruction-experiments/comparison-with-state-of-the-art/configurations/networked/no-inputs"
 # UID/GID the weird peer's privileges are dropped to.
 jail-uid: 1000
@@ -21,7 +21,7 @@ source:
 sink:
     # The target binary that has to be compiled with our custom AFL++ version.
     bin-path: "/home/user/fuzztruction/my-experiments/build/openvpn/consumer/openvpn"
-    arguments: ["--config", "/home/user/fuzztruction/my-experiments/config/openvpn/configs/server.conf", "--cd", "/home/user/fuzztruction/my-experiments/config/openvpn", "--single-session"]
+    arguments: ["--config", "/home/user/fuzztruction/my-experiments/config/openvpn/configs/server.conf", "--cd", "/home/user/fuzztruction/my-experiments/config/openvpn", "--verb", "9", "--single-session"]
     input-type: Tcp
     output-type: Tcp
     is-server: true
