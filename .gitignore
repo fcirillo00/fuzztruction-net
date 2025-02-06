@@ -11,7 +11,7 @@ target
 **/eval-results/done-runs/**
 **/eval-scripts/*_coverage.pdf
 eval-targets
-eval-results
+eval-result
 
 # ida related
 **/*.id[0-9]

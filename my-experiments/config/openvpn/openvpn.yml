@@ -1,5 +1,5 @@
 # Directory in that all files that belong to the fuzzing campaign are stored.
-work-directory: "/home/user/fuzztruction/openvpn-1"
+work-directory: "/home/user/fuzztruction/eval-result/openvpn-3"
 input-directory: "/home/user/fuzztruction/fuzztruction-experiments/comparison-with-state-of-the-art/configurations/networked/no-inputs"
 # UID/GID the weird peer's privileges are dropped to.
 jail-uid: 1000
@@ -10,7 +10,7 @@ source:
     # The binary that has to be instrumented with our custom compiler.
     bin-path: "/home/user/fuzztruction/my-experiments/build/openvpn/generator/openvpn"
     # session timeout is needed so that openvpn closes itself after a while and fuzzing can proceed
-    arguments: ["--config", "/home/user/fuzztruction/my-experiments/config/openvpn/configs/client.conf", "--cd", "/home/user/fuzztruction/my-experiments/config/openvpn", "--verb", "9", "--single-session", "--session-timeout",  "2", "--route-up", "./script.sh", "--script-security", "2"]
+    arguments: ["--config", "/home/user/fuzztruction/my-experiments/config/openvpn/configs/client.conf", "--cd", "/home/user/fuzztruction/my-experiments/config/openvpn", "--verb", "9", "--single-session", "--session-timeout",  "2"]
     input-type: Tcp
     output-type: Tcp
     is-server: false
@@ -21,12 +21,12 @@ source:
 sink:
     # The target binary that has to be compiled with our custom AFL++ version.
     bin-path: "/home/user/fuzztruction/my-experiments/build/openvpn/consumer/openvpn"
-    arguments: ["--config", "/home/user/fuzztruction/my-experiments/config/openvpn/configs/server.conf", "--cd", "/home/user/fuzztruction/my-experiments/config/openvpn", "--verb", "9", "--single-session"]
+    arguments: ["--config", "/home/user/fuzztruction/my-experiments/config/openvpn/configs/server.conf", "--cd", "/home/user/fuzztruction/my-experiments/config/openvpn", "--verb", "9", "--single-session", "--session-timeout",  "2"]
     input-type: Tcp
     output-type: Tcp
     is-server: true
     server-port: "1194"
-    server-ready-on: "Bind(0)" # necessary, otherwise fuzzer doesn't see the server as ready
+    # server-ready-on: "Bind(0)" # necessary, otherwise fuzzer doesn't see the server as ready
     log-stdout: true
     log-stderr: true
     allow-unstable-sink: true # i dont know what it does
