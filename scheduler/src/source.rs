@@ -1253,6 +1253,14 @@ impl Source {
                     log::trace!("Got MsgIdOk message");
                     break;
                 }
+                MessageType::AfterBind => {
+                    log::trace!("Got AfterBind message");
+                    std::process::Command::new("sh").arg("-c").arg("ps -eo pid,pgid,comm | grep openvpn | awk '$1 != $2 {print $1}' | xargs kill").output().ok();
+                }
+                MessageType::AfterConnect => {
+                    log::trace!("Got AfterConnect message");
+                    std::process::Command::new("sh").arg("-c").arg("ps -eo pid,pgid,comm | grep openvpn | awk '$1 != $2 {print $1}' | xargs kill").output().ok();
+                }
                 _ => {
                     return Err(SourceError::FatalError(format!(
                         "Unexpected messsage during wait_for_ok(): {:#?}",
