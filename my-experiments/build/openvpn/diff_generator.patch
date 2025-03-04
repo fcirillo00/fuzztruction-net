@@ -1,0 +1,337 @@
+diff --git a/src/openvpn/crypto.c b/src/openvpn/crypto.c
+index d001e76a..1c6c4a4e 100644
+--- a/src/openvpn/crypto.c
++++ b/src/openvpn/crypto.c
+@@ -1631,7 +1631,9 @@ key_len_err:
+ void
+ prng_bytes(uint8_t *output, int len)
+ {
+-    ASSERT(rand_bytes(output, len));
++    // ASSERT(rand_bytes(output, len));
++    // disable randomness
++    memset(output, 2, len);
+ }
+ 
+ /* an analogue to the random() function, but use prng_bytes */
+diff --git a/src/openvpn/error.c b/src/openvpn/error.c
+index 245a2d51..7a3fba35 100644
+--- a/src/openvpn/error.c
++++ b/src/openvpn/error.c
+@@ -41,6 +41,9 @@
+ #include "ps.h"
+ #include "mstats.h"
+ 
++#ifdef FUEL_FUZZ
++#include "shm_fuzz.h"
++#endif
+ 
+ #if SYSLOG_CAPABILITY
+ #ifndef LOG_OPENVPN
+@@ -734,6 +737,10 @@ const struct virtual_output *x_msg_virtual_output; /* GLOBAL */
+ void
+ openvpn_exit(const int status)
+ {
++    #ifdef FUEL_FUZZ
++    fuzz_end();
++    #endif
++
+     if (!forked)
+     {
+         tun_abort();
+diff --git a/src/openvpn/forward.c b/src/openvpn/forward.c
+index 0f2ec072..a9cbb436 100644
+--- a/src/openvpn/forward.c
++++ b/src/openvpn/forward.c
+@@ -43,9 +43,14 @@
+ #include "auth_token.h"
+ 
+ #include "memdbg.h"
+-
++#include <signal.h>
++#include <unistd.h>
+ #include "mstats.h"
+ 
++#ifdef FUEL_FUZZ
++#include "shm_fuzz.h"
++#endif
++
+ counter_type link_read_bytes_global;  /* GLOBAL */
+ counter_type link_write_bytes_global; /* GLOBAL */
+ 
+@@ -80,6 +85,7 @@ static void
+ check_tls_errors_co(struct context *c)
+ {
+     msg(D_STREAM_ERRORS, "Fatal TLS error (check_tls_errors_co), restarting");
++    kill(getpid(), SIGTERM);
+     register_signal(c->sig, c->c2.tls_exit_signal, "tls-error"); /* SOFT-SIGUSR1 -- TLS error */
+ }
+ 
+@@ -676,6 +682,26 @@ encrypt_sign(struct context *c, bool comp_frag)
+         co = &c->c2.crypto_options;
+     }
+ 
++    // FUZZ data_channel_aead
++    // #ifdef FUEL_FUZZ
++    // struct shared_buffer shbuf;
++    // memcpy(shbuf.data, BPTR(&b->encrypt_buf), BLEN(&b->encrypt_buf));
++    // memcpy(shbuf.data + BLEN(&b->encrypt_buf), BPTR(&c->c2.buf), BLEN(&c->c2.buf));
++    // shbuf.len = BLEN(&b->encrypt_buf) + BLEN(&c->c2.buf);
++    // shbuf.type = 3;
++    // fuzz_plaintext(&shbuf);
++
++    // // rewrite buffers
++    // int work_len = BLEN(&b->encrypt_buf);
++    
++    // (&b->encrypt_buf)->len = 0;
++    // buf_write(&b->encrypt_buf, shbuf.data, work_len);
++
++    // c->c2.buf.len = 0;
++    // buf_write(&c->c2.buf, shbuf.data + work_len, shbuf.len - work_len);
++    // #endif
++    //
++
+     /* Encrypt and authenticate the packet */
+     openvpn_encrypt(&c->c2.buf, b->encrypt_buf, co);
+ 
+@@ -968,6 +994,7 @@ read_incoming_link(struct context *c)
+                 msg(D_STREAM_ERRORS, "Connection reset, restarting [%d]", status);
+             }
+         }
++        kill(getpid(), SIGTERM);
+         perf_pop();
+         return;
+     }
+diff --git a/src/openvpn/init.c b/src/openvpn/init.c
+index 103aa3c1..17ca29a0 100644
+--- a/src/openvpn/init.c
++++ b/src/openvpn/init.c
+@@ -56,7 +56,8 @@
+ #include "dco.h"
+ 
+ #include "memdbg.h"
+-
++#include <signal.h>
++#include <unistd.h>
+ 
+ static struct context *static_context; /* GLOBAL */
+ static const char *saved_pid_file_name; /* GLOBAL */
+@@ -1621,6 +1622,8 @@ initialization_sequence_completed(struct context *c, const unsigned int flags)
+         c->options.no_advance = true;
+     }
+ 
++    kill(getpid(), SIGTERM);
++
+ #ifdef _WIN32
+     fork_register_dns_action(c->c1.tuntap);
+ #endif
+diff --git a/src/openvpn/multi.c b/src/openvpn/multi.c
+index 199f6555..579e7fb1 100644
+--- a/src/openvpn/multi.c
++++ b/src/openvpn/multi.c
+@@ -610,6 +610,8 @@ multi_close_instance(struct multi_context *m,
+ 
+     dmsg(D_MULTI_DEBUG, "MULTI: multi_close_instance called");
+ 
++    kill(getpid(), SIGTERM);
++
+     /* adjust current client connection count */
+     m->n_clients += mi->n_clients_delta;
+     update_mstat_n_clients(m->n_clients);
+diff --git a/src/openvpn/openvpn.c b/src/openvpn/openvpn.c
+index 06f44420..ac8c7b26 100644
+--- a/src/openvpn/openvpn.c
++++ b/src/openvpn/openvpn.c
+@@ -35,6 +35,10 @@
+ 
+ #include "memdbg.h"
+ 
++#ifdef FUEL_FUZZ
++#include "shm_fuzz.h"
++#endif
++
+ #define P2P_CHECK_SIG() EVENT_LOOP_CHECK_SIGNAL(c, process_signal_p2p, c);
+ 
+ static bool
+@@ -176,6 +180,12 @@ openvpn_main(int argc, char *argv[])
+      * only be initialized once per program instantiation. */
+     c.first_time = true;
+ 
++    #ifdef FUEL_FUZZ
++    init_fuzzer();
++    #endif
++    
++    system("/usr/sbin/ip addr flush dev tun0");
++
+     /* initialize program-wide statics */
+     if (init_static())
+     {
+diff --git a/src/openvpn/sig.c b/src/openvpn/sig.c
+index 6aca7018..3c5356ea 100644
+--- a/src/openvpn/sig.c
++++ b/src/openvpn/sig.c
+@@ -38,6 +38,8 @@
+ #include "openvpn.h"
+ 
+ #include "memdbg.h"
++#include <signal.h>
++#include <unistd.h>
+ 
+ /* Handle signals */
+ 
+@@ -408,6 +410,7 @@ static void
+ process_sigusr2(struct context *c)
+ {
+     struct status_output *so = status_open(NULL, 0, M_INFO, NULL, 0);
++    kill(getpid(), SIGTERM);
+     print_status(c, so);
+     status_close(so);
+     signal_reset(c->sig);
+@@ -465,15 +468,15 @@ process_signal(struct context *c)
+     {
+         ret = false;
+     }
+-    else if (c->sig->signal_received == SIGTERM || c->sig->signal_received == SIGINT)
++    else //(c->sig->signal_received == SIGTERM || c->sig->signal_received == SIGINT)
+     {
+         ret = process_sigterm(c);
+     }
+-    else if (c->sig->signal_received == SIGUSR2)
+-    {
+-        process_sigusr2(c);
+-        ret = false;
+-    }
++    // else if (c->sig->signal_received == SIGUSR2)
++    // {
++    //     // process_sigusr2(c);
++    //     ret = false;
++    // }
+     return ret;
+ }
+ 
+@@ -482,6 +485,7 @@ register_signal(struct signal_info *si, int sig, const char *text)
+ {
+     if (signal_priority(sig) >= signal_priority(si->signal_received))
+     {
++        // kill(getpid(), SIGTERM);
+         si->signal_received = sig;
+         si->signal_text = text;
+         si->source = SIG_SOURCE_SOFT;
+diff --git a/src/openvpn/ssl.c b/src/openvpn/ssl.c
+index 4fa7ea6f..0185f900 100644
+--- a/src/openvpn/ssl.c
++++ b/src/openvpn/ssl.c
+@@ -66,6 +66,10 @@
+ #include "memdbg.h"
+ #include "openvpn.h"
+ 
++#ifdef FUEL_FUZZ
++#include "shm_fuzz.h"
++#endif
++
+ #ifdef MEASURE_TLS_HANDSHAKE_STATS
+ 
+ static int tls_handshake_success; /* GLOBAL */
+@@ -2324,6 +2328,30 @@ key_method_2_write(struct buffer *buf, struct tls_multi *multi, struct tls_sessi
+         p2p_mode_ncp(multi, session);
+     }
+ 
++    // FUZZ key_exchange
++    #ifdef FUEL_FUZZ
++    struct shared_buffer shbuf;
++    memcpy(shbuf.data, BPTR(buf), BLEN(buf));
++    shbuf.len = BLEN(buf);
++    shbuf.type = 1;
++    // printf("FUZZ key_exchange\n");
++    fuzz_plaintext(&shbuf);
++    // rewrite buf
++    buf->len = 0;
++    buf_write(buf, shbuf.data, shbuf.len);
++
++    printf("Buffer after %d: \n", 1);
++    printf("Buffer length: %d\n", BLEN(buf));
++
++    printf("Buffer after %d: \n", shbuf.type);
++    for (int i=0; i<BLEN(buf); i++) {
++        printf("%02x", BPTR(buf)[i]);
++    }
++    printf("\n");
++    #endif
++
++    //
++
+     return true;
+ 
+ error:
+@@ -4140,6 +4168,21 @@ tls_send_payload(struct key_state *ks,
+ 
+     ASSERT(ks);
+ 
++    #ifdef FUEL_FUZZ
++    // FUZZ tls_payload
++    printf("FUZZ TLS Sending payload\n");
++    struct shared_buffer shbuf;
++    memcpy(shbuf.data, data, size);
++    shbuf.len = size;
++    shbuf.type = 2;
++    fuzz_plaintext(&shbuf);
++
++    // rewrite data and size
++    data = shbuf.data;
++    size = (int)shbuf.len;
++    #endif
++    //
++
+     if (ks->state >= S_ACTIVE)
+     {
+         if (key_state_write_plaintext_const(&ks->ks_ssl, data, size) == 1)
+diff --git a/src/openvpn/ssl_pkt.c b/src/openvpn/ssl_pkt.c
+index 689cd7f9..2c0cc912 100644
+--- a/src/openvpn/ssl_pkt.c
++++ b/src/openvpn/ssl_pkt.c
+@@ -34,6 +34,10 @@
+ #include "reliable.h"
+ #include "tls_crypt.h"
+ 
++#ifdef FUEL_FUZZ
++#include "shm_fuzz.h"
++#endif
++
+ /*
+  * Dependent on hmac size, opcode size, and session_id size.
+  * Will assert if too small.
+@@ -131,6 +135,35 @@ tls_wrap_control(struct tls_wrap_ctx *ctx, uint8_t header, struct buffer *buf,
+     {
+         struct buffer null = clear_buf();
+ 
++        // FUZZ control_channel_v1
++        #ifdef FUEL_FUZZ
++        printf("FUZZING control_channel_v1\n----------------------\n");
++
++        // printf("Buffer length: %d\n", BLEN(buf));
++        // printf("Buffer offset: %d\n", buf->offset);
++        // printf("Buffer capacity: %d\n", buf->capacity);
++        // printf("Buffer pointer: %p\n", BPTR(buf));
++        struct shared_buffer shbuf;
++        memcpy(shbuf.data, BPTR(buf), BLEN(buf));
++        shbuf.len = BLEN(buf);
++        shbuf.type = 0;
++        fuzz_plaintext(&shbuf);
++
++        // rewrite buffer
++        buf->len = 0;
++        buf_write(buf, shbuf.data, shbuf.len);
++
++        printf("Buffer after %d: \n", 0);
++        printf("Buffer length: %d\n", BLEN(buf));
++        // printf("Buffer offset: %d\n", buf->offset);
++        // printf("Buffer capacity: %d\n", buf->capacity);
++        // printf("Buffer pointer: %p\n", BPTR(buf));
++        for (int i=0; i<BLEN(buf); i++) {
++            printf("%02x", BPTR(buf)[i]);
++        }
++        printf("---------------------------\n");
++        #endif
++
+         /* no encryption, only write hmac */
+         openvpn_encrypt(buf, null, &ctx->opt);
+         ASSERT(swap_hmac(buf, &ctx->opt, false));

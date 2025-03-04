@@ -270,6 +270,23 @@ impl FuzzingWorker {
         let coverage_map = sink.bitmap();
         coverage_map.classify_counts();
 
+        let profraw_dir = self.config.general.work_dir;
+        let current_profraw = profraw_dir.join("run.profraw");
+        let merged_profraw = profraw_dir.join("merge.profraw");
+
+        let mut cmd = Command::new("llvm-profdata");
+        cmd.args(["merge", "-sparse"]);
+
+        if merged.profraw.exists() {
+            cmd.arg(current_profraw.to_str().unwrap());
+            cmd.arg(merged_profraw.to_str().unwrap());    
+        } else {
+            cmd.arg(current_profraw.to_str().unwrap());
+        }
+
+        cmd.args(["-o", merged_profraw.to_str().unwrap()]);
+        cmd.spawn().unwrap().wait().unwrap();
+
         match run_result {
             sink::RunResult::Terminated(..) => {
                 stats.successful_source_execs += 1;

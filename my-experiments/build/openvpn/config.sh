@@ -16,7 +16,7 @@ function build_generator {
     export CFLAGS="-g -O3 -DNDEBUG -D_FORTIFY_SOURCE=0 -DFT_FUZZING -DFT_GENERATOR"
     export CXXFLAGS="-g -O3 -DNDEBUG -D_FORTIFY_SOURCE=0 -DFT_FUZZING -DFT_GENERATOR"
 
-    git apply ../diff_tun0.patch
+    git apply ../diff_generator.patch
 
     autoreconf -i -v -f
     # enable-iproute2 required for no-root execution
@@ -41,10 +41,10 @@ function build_consumer {
 
     export CC=afl-clang-fast
     export CXX=afl-clang-fast++
-    export CFLAGS="-g -O3 -fsanitize=address -DFT_FUZZING -DFT_CONSUMER"
-    export CXXFLAGS="-g -O3 -fsanitize=address -DFT_FUZZING -DFT_CONSUMER"
+    export CFLAGS="-g -O3 -fsanitize=address -fprofile-instr-generate -fcoverage-mapping -DFT_FUZZING -DFT_CONSUMER"
+    export CXXFLAGS="-g -O3 -fsanitize=address -fprofile-instr-generate -fcoverage-mapping -DFT_FUZZING -DFT_CONSUMER"
 
-    git apply ../diff_tun1.patch
+    git apply ../diff_consumer.patch
 
     autoreconf -i -v -f
     # enable-iproute2 required for no-root execution

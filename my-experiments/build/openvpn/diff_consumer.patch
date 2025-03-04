@@ -1,0 +1,131 @@
+diff --git a/src/openvpn/crypto.c b/src/openvpn/crypto.c
+index d001e76a..39e34238 100644
+--- a/src/openvpn/crypto.c
++++ b/src/openvpn/crypto.c
+@@ -1631,7 +1631,9 @@ key_len_err:
+ void
+ prng_bytes(uint8_t *output, int len)
+ {
+-    ASSERT(rand_bytes(output, len));
++    // ASSERT(rand_bytes(output, len));
++    // disable randomness
++    memset(output, 1, len);
+ }
+ 
+ /* an analogue to the random() function, but use prng_bytes */
+diff --git a/src/openvpn/forward.c b/src/openvpn/forward.c
+index 0f2ec072..3b41733f 100644
+--- a/src/openvpn/forward.c
++++ b/src/openvpn/forward.c
+@@ -43,7 +43,8 @@
+ #include "auth_token.h"
+ 
+ #include "memdbg.h"
+-
++#include <signal.h>
++#include <unistd.h>
+ #include "mstats.h"
+ 
+ counter_type link_read_bytes_global;  /* GLOBAL */
+@@ -968,6 +969,8 @@ read_incoming_link(struct context *c)
+                 msg(D_STREAM_ERRORS, "Connection reset, restarting [%d]", status);
+             }
+         }
++
++        kill(getpid(), SIGTERM);
+         perf_pop();
+         return;
+     }
+diff --git a/src/openvpn/multi.c b/src/openvpn/multi.c
+index 199f6555..e23847a9 100644
+--- a/src/openvpn/multi.c
++++ b/src/openvpn/multi.c
+@@ -45,7 +45,8 @@
+ #include <inttypes.h>
+ 
+ #include "memdbg.h"
+-
++#include <signal.h>
++#include <unistd.h>
+ 
+ #include "crypto_backend.h"
+ #include "ssl_util.h"
+@@ -605,6 +606,8 @@ multi_close_instance(struct multi_context *m,
+ {
+     perf_push(PERF_MULTI_CLOSE_INSTANCE);
+ 
++    kill(getpid(), SIGTERM);
++
+     ASSERT(!mi->halt);
+     mi->halt = true;
+ 
+diff --git a/src/openvpn/openvpn.c b/src/openvpn/openvpn.c
+index 06f44420..e0f46ca2 100644
+--- a/src/openvpn/openvpn.c
++++ b/src/openvpn/openvpn.c
+@@ -176,6 +176,8 @@ openvpn_main(int argc, char *argv[])
+      * only be initialized once per program instantiation. */
+     c.first_time = true;
+ 
++    system("/usr/sbin/ip addr flush dev tun1");
++
+     /* initialize program-wide statics */
+     if (init_static())
+     {
+diff --git a/src/openvpn/sig.c b/src/openvpn/sig.c
+index 6aca7018..b2fb4a14 100644
+--- a/src/openvpn/sig.c
++++ b/src/openvpn/sig.c
+@@ -465,15 +465,15 @@ process_signal(struct context *c)
+     {
+         ret = false;
+     }
+-    else if (c->sig->signal_received == SIGTERM || c->sig->signal_received == SIGINT)
++    else // if (c->sig->signal_received == SIGTERM || c->sig->signal_received == SIGINT)
+     {
+         ret = process_sigterm(c);
+     }
+-    else if (c->sig->signal_received == SIGUSR2)
+-    {
+-        process_sigusr2(c);
+-        ret = false;
+-    }
++    // else if (c->sig->signal_received == SIGUSR2)
++    // {
++    //     process_sigusr2(c);
++    //     ret = false;
++    // }
+     return ret;
+ }
+ 
+@@ -482,6 +482,7 @@ register_signal(struct signal_info *si, int sig, const char *text)
+ {
+     if (signal_priority(sig) >= signal_priority(si->signal_received))
+     {
++        kill(getpid(), SIGTERM);
+         si->signal_received = sig;
+         si->signal_text = text;
+         si->source = SIG_SOURCE_SOFT;
+diff --git a/src/openvpn/socket.c b/src/openvpn/socket.c
+index e0706881..45091fe5 100644
+--- a/src/openvpn/socket.c
++++ b/src/openvpn/socket.c
+@@ -41,7 +41,8 @@
+ #include "forward.h"
+ 
+ #include "memdbg.h"
+-
++#include <signal.h>
++#include <unistd.h>
+ /*
+  * Convert sockflags/getaddr_flags into getaddr_flags
+  */
+@@ -2392,6 +2393,8 @@ link_socket_connection_initiated(struct link_socket_info *info,
+         msg(M_INFO, "%s", BSTR(&out));
+     }
+ 
++    kill(getpid(), SIGTERM);
++
+     /* set environmental vars */
+     setenv_str(es, "common_name", common_name);
+ 
