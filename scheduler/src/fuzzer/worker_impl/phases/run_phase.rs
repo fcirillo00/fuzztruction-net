@@ -129,6 +129,10 @@ impl FuzzingWorker {
                 let mutator_type = mutator.mutator_type();
                 for _ in mutator {
                     iteration_stats.execs += 1;
+                    {
+                        let mut shared_stats = self.stats.lock().unwrap();
+                        log::info!("Executions: {:#?}", shared_stats.execs + iteration_stats.execs);
+                    }
                     self.do_run(
                         &mut iteration_stats,
                         source_input_bytes,
