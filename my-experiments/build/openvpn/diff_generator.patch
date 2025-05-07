@@ -160,7 +160,7 @@ index 06f44420..ac8c7b26 100644
 +    init_fuzzer();
 +    #endif
 +    
-+    system("/usr/sbin/ip addr flush dev tun0");
++    system("/usr/local/sbin/unpriv-ip addr flush dev tun0");
 +
      /* initialize program-wide statics */
      if (init_static())

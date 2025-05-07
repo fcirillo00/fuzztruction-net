@@ -26,7 +26,7 @@ cd ../..
 sudo ./target/debug/fuzztruction ./my-experiments/config/openvpn/openvpn.yml --purge --log-output benchmark -i 5 --log-level trace
 
 # fuzz (im not sure if it can be run as multi-process)
-sudo ./target/debug/fuzztruction ./my-experiments/config/openvpn/openvpn.yml --log-output fuzz -j 1 -t 5m --purge --log-level trace 
+sudo ./target/debug/fuzztruction ./my-experiments/config/openvpn/openvpn.yml --log-output fuzz -j 1 -t 1m --purge --log-level trace 
 ```
 
 ## Other stuff

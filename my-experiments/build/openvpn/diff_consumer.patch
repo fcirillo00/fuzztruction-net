@@ -67,7 +67,7 @@ index 06f44420..e0f46ca2 100644
       * only be initialized once per program instantiation. */
      c.first_time = true;
  
-+    system("/usr/sbin/ip addr flush dev tun1");
++    system("/usr/local/sbin/unpriv-ip addr flush dev tun1");
 +
      /* initialize program-wide statics */
      if (init_static())

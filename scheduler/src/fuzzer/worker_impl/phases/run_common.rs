@@ -1,4 +1,6 @@
 use std::{sync::Arc, time::Instant};
+use std::path::PathBuf;
+use std::process::Command;
 
 use crate::{
     constants::EXECUTION_TIMEOUT_MULTIPLYER,
@@ -265,27 +267,18 @@ impl FuzzingWorker {
         run_result: sink::RunResult,
         sink_input: &[u8],
     ) -> Result<()> {
+        {
+            let current_profraw = PathBuf::from("/tmp/coverage/run.profraw");
+            if current_profraw.exists() {
+                let new_profraw = PathBuf::from(format!("/tmp/coverage/id{}-{}.profraw", stats.execs, rand::random::<u32>()));
+                std::fs::copy(current_profraw, new_profraw).unwrap();
+            }
+        }
+
         let _entry = self.state.entry();
         let sink = self.sink.as_mut().unwrap();
         let coverage_map = sink.bitmap();
         coverage_map.classify_counts();
-
-        let profraw_dir = self.config.general.work_dir;
-        let current_profraw = profraw_dir.join("run.profraw");
-        let merged_profraw = profraw_dir.join("merge.profraw");
-
-        let mut cmd = Command::new("llvm-profdata");
-        cmd.args(["merge", "-sparse"]);
-
-        if merged.profraw.exists() {
-            cmd.arg(current_profraw.to_str().unwrap());
-            cmd.arg(merged_profraw.to_str().unwrap());    
-        } else {
-            cmd.arg(current_profraw.to_str().unwrap());
-        }
-
-        cmd.args(["-o", merged_profraw.to_str().unwrap()]);
-        cmd.spawn().unwrap().wait().unwrap();
 
         match run_result {
             sink::RunResult::Terminated(..) => {

@@ -1,5 +1,5 @@
 # Directory in that all files that belong to the fuzzing campaign are stored.
-work-directory: "/home/user/fuzztruction/eval-result/openvpn-3" # change sink env too
+work-directory: "/home/user/fuzztruction/eval-result/36h-3-full"
 input-directory: "/home/user/fuzztruction/fuzztruction-experiments/comparison-with-state-of-the-art/configurations/networked/no-inputs"
 # UID/GID the weird peer's privileges are dropped to.
 jail-uid: 1000
@@ -23,7 +23,7 @@ sink:
     bin-path: "/home/user/fuzztruction/my-experiments/build/openvpn/consumer/openvpn"
     arguments: ["--config", "/home/user/fuzztruction/my-experiments/config/openvpn/configs/server.conf", "--cd", "/home/user/fuzztruction/my-experiments/config/openvpn", "--verb", "3", "--single-session", "--session-timeout",  "1"]
     env:
-        LLVM_PROFILE_FILE: "/home/user/fuzztruction/eval-result/openvpn-3/run.profraw"
+        - LLVM_PROFILE_FILE: "/tmp/coverage/run.profraw"
     input-type: Tcp
     output-type: Tcp
     is-server: true
@@ -37,6 +37,9 @@ sink:
     # alternative solution: cleanup script with "sudo ip addr flush dev tun0"
     # solved by editing source code of openvpn to cleanup at init
     send-sigterm: true 
+
+sink-cov:
+    bin-path: "/home/user/fuzztruction/my-experiments/build/openvpn/consumer/openvpn"
 
 # Unused.
 vanilla:

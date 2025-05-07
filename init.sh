@@ -6,6 +6,7 @@ sudo mknod /dev/hwrng c 1 8
 # fuzzer says to run these commands at first
 echo core | sudo tee /proc/sys/kernel/core_pattern
 echo 1 | sudo tee /proc/sys/kernel/perf_event_paranoid
+echo 0 | sudo tee /proc/sys/fs/suid_dumpable
 
 # initialize dev tun0 tun1 for openvpn no root mode
 sudo my-experiments/build/openvpn/generator/openvpn --rmtun --dev tun0
