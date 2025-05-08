@@ -131,7 +131,7 @@ impl FuzzingWorker {
                     iteration_stats.execs += 1;
                     {
                         let mut shared_stats = self.stats.lock().unwrap();
-                        log::info!("Executions: {:#?}", shared_stats.execs + iteration_stats.execs);
+                        println!("Executions: {:#?}", shared_stats.execs + iteration_stats.execs);
                     }
                     self.do_run(
                         &mut iteration_stats,
